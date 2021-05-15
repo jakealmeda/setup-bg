@@ -1,7 +1,7 @@
 <?php
 
 if ( ! defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly
+	exit; // Exit if accessed directly
 }
 
 //include_once( 'sfm-genesis-hooks-list.php' );
@@ -22,12 +22,13 @@ class SetupBG_FillACFSelectFields {
 		//Loop through whatever data you are using, and assign a key/value
 		if( is_array( $hookers->genesis_hooks ) ) {
 
-		    foreach( $hookers->genesis_hooks as $value ) {
-		        
-		        $field['choices'][$value] = $value;
-		    }
+			foreach( $hookers->genesis_hooks as $value ) {
 
-		    return $field;
+				$field['choices'][$value] = $value;
+
+			}
+
+			return $field;
 
 		}
 
@@ -39,32 +40,36 @@ class SetupBG_FillACFSelectFields {
 	 *
 	 */
 	public function acf_sbg_view_choices( $field ) {
-	    
-	    $z = new SetupBG();
 
-	    $file_extn = 'html';
+		$z = new SetupBG();
 
-	    // get all files found in VIEWS folder
-	    $view_dir = $z->setup_sbg_dir_path().'views/';
+		$file_extn = 'html';
 
-	    $data_from_dir = $this->sbg_autofill_view_files( $view_dir, $file_extn );
+		// get all files found in VIEWS folder
+		$view_dir = $z->setup_sbg_dir_path().'views/';
 
-	    $field['choices'] = array();
+		$data_from_dir = $this->sbg_autofill_view_files( $view_dir, $file_extn );
 
-	    //Loop through whatever data you are using, and assign a key/value
-	    if( is_array( $data_from_dir ) ) {
+		$field['choices'] = array();
 
-	        foreach( $data_from_dir as $field_key => $field_value ) {
-	            $field['choices'][$field_key] = $field_value;
-	        }
+		//Loop through whatever data you are using, and assign a key/value
+		if( is_array( $data_from_dir ) ) {
 
-	        return $field;
+			foreach( $data_from_dir as $field_key => $field_value ) {
+				$field['choices'][$field_key] = $field_value;
+			}
 
-	    }
-	    
+			return $field;
+
+		}
+
 	}
 
 
+	/**
+	 * Pull template files
+	 *
+	 */
 	public function sbg_autofill_view_files( $directory, $file_extn ) {
 
 		$out = array();
@@ -80,13 +85,17 @@ class SetupBG_FillACFSelectFields {
 
 		}
 
-        // Return an array of files (without the directory)
-        return $out;
+		// Return an array of files (without the directory)
+		return $out;
 
-    }
+	}
 
 
-    public function acf_sbg_size_choices( $field ) {
+	/**
+	 * Auto fill Select options for Image sizes
+	 *
+	 */
+	public function acf_sbg_size_choices( $field ) {
 
 		$field['choices'] = array();
 
@@ -103,7 +112,33 @@ class SetupBG_FillACFSelectFields {
 
 		}
 
-    }
+	}
+
+
+	/**
+	 * Auto fill Select options for Genesis Hooks
+	 *
+	 */
+	public function sbg_autofill_genesis_functions( $field ) {
+
+		$funcs = new SetupBG_GenesisFunctionsList();
+
+		$field['choices'] = array();
+
+		//Loop through whatever data you are using, and assign a key/value
+		if( is_array( $funcs->genesis_functions ) ) {
+
+			foreach( $funcs->genesis_functions as $value ) {
+
+				$field['choices'][$value] = $value;
+
+			}
+
+			return $field;
+
+		}
+
+	}
 
 
 	// CONSTRUCT
@@ -111,12 +146,16 @@ class SetupBG_FillACFSelectFields {
 
 		// AUTO FILL SELECT FOR HOOKS (ACF)
 		add_filter( 'acf/load_field/name=bg_hooks', array( $this, 'sbg_autofill_hookimages' ) );
+		add_filter( 'acf/load_field/name=bg_hook_target', array( $this, 'sbg_autofill_hookimages' ) );
 
 		// AUTO FILL SELECT FOR TEMPLATES (ACF)
 		add_filter( 'acf/load_field/name=bg_template', array( $this, 'acf_sbg_view_choices' ) );
 
-		// AUTO FILL SELECT FOR TEMPLATES (ACF)
+		// AUTO FILL SELECT FOR IMAGE SIZE (ACF)
 		add_filter( 'acf/load_field/name=bg_size', array( $this, 'acf_sbg_size_choices' ) );
+
+		// AUTO FILL SELECT FOR GENESIS FUNCTIONS
+		add_filter( 'acf/load_field/name=bg_function', array( $this, 'sbg_autofill_genesis_functions' ) );
 
 	}
 	

@@ -13,13 +13,21 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly
 }
+/*
+Wishlist:
 
+1. Insert styles inline or CSS selectors on existing container (like body,
+site-container, site-header, inner)
+
+2. Use ACF templates to dictate the layout structure of what we're inserting.
+Does this mean we can modify the header just from ACF template alone?
+*/
 $setup_bg = new SetupBG();
 include_once( 'lib/sbg-genesis-hooks-list.php' );
+include_once( 'lib/sbg-genesis-functions-list.php' );
 include_once( 'lib/sbg-acf-autofill-select-fields.php' );
 
 class SetupBG {
-
 
 	/**
 	 * Main function | Loop through repeater entries
@@ -30,14 +38,66 @@ class SetupBG {
 //		if( ! is_single() )
 //			return TRUE;
 
-		$args = array();
-		
 		// PULL POST ID FROM THE URL
 		$post_id = url_to_postid( $_SERVER['REQUEST_URI'] , '_wpg_def_keyword', true ); 
 
-		$repeater_name = 'images';
+		// ###################################
+		// # ACF > CONTAINERS (TAB) > BG_HOOK_REPEATER
+		// # --------------------------------
+		// # loop through each repeater's row
+		// ###################################
+		
+		if( have_rows( 'bg_hook_repeater', $post_id ) ):
+			
+			while( have_rows( 'bg_hook_repeater', $post_id ) ): the_row();
+				
+				if( 'activate' == get_sub_field( 'bg_status' ) ) {
 
-		// loop through each repeater's row
+					$bg_hook_target = get_sub_field( 'bg_hook_target' );
+					$bg_function = get_sub_field( 'bg_function' );
+					$bg_hook_priority = get_sub_field( 'bg_hook_priority' );
+
+					// FILTER HOOK AND FUNCTION
+					if( $bg_hook_target != 'N/A' && $bg_function != 'N/A' ) :
+
+						if( function_exists( $bg_function ) ) {
+
+							if( 'remove' == get_sub_field( 'bg_action' ) ) {
+
+								remove_action( $bg_hook_target, $bg_function,  );
+
+							} else {
+
+								// ADD
+								// display the function based on the hook
+								add_action( $bg_hook_target, $bg_function, $bg_hook_priority );
+							}
+
+						} else {
+
+							add_action( $bg_hook_target, function() {
+
+								echo '<img src="'.plugin_dir_url( __FILE__ ).'images/blue_bell.png" style="width:40px; height:40px;" /> Sorry, this function DOES NOT exist.';
+
+							}, $bg_hook_priority );
+
+						}
+
+					endif;
+
+				}
+
+			endwhile;
+		
+		endif;
+
+		// ###################################
+		// # ACF > IMAGES (TAB) > BG_BACKGROUND
+		// # --------------------------------
+		// # loop through each repeater's row
+		// ###################################
+		$args = array();
+		$repeater_name = 'bg_background';
 		if( have_rows( $repeater_name, $post_id ) ):
 			
 			while( have_rows( $repeater_name, $post_id ) ): the_row();
@@ -62,7 +122,7 @@ class SetupBG {
 						'bg_image' 		=> $bg_image_group[ 'bg_image' ],
 					);
 
-					$fields_bg = array( 'bg_template', 'bg_size', 'bg_css' );
+					$fields_bg = array( 'bg_template', 'bg_size', 'bg_css', 'bg_inline_style' );
 					foreach( $fields_bg as $v ) {
 						$args[ $v ] = $bg_attributes_group[ $v ];
 					}
@@ -72,7 +132,7 @@ class SetupBG {
 
 						$this->setup_bg_display_hooks( $args );
 
-					});
+					}, $bg_attributes_group[ 'bg_priority' ] );
 
 				endif;
 
@@ -84,7 +144,7 @@ class SetupBG {
 
 
 	public function setup_bg_display_hooks( $args ) {
-
+		
 		// Set default size
 		if( empty( $args[ 'bg_size' ] ) ) {
 			$size = 'large';
@@ -95,9 +155,22 @@ class SetupBG {
 		// Get the image
 		if( !empty( $args[ 'bg_image' ] ) ) {
 
-			$replace_array = array(
-					'{@image}'	=> wp_get_attachment_image( $args[ 'bg_image' ] , $size, '', array( 'class' => $args[ 'bg_css' ] ) ),
-				);
+			if( empty( $args[ 'bg_inline_style' ] ) ) :
+
+				$replace_array = array(
+						'{@image}'	=> wp_get_attachment_image( $args[ 'bg_image' ] , $size, FALSE, array( 'class' => $args[ 'bg_css' ] ) ),
+					);
+
+			else:
+
+				//echo wp_get_attachment_image_url( $args[ 'bg_image' ], $size );
+				$p = wp_get_attachment_image_src( $args[ 'bg_image' ], $size, FALSE, '' );
+//				echo '<img src="'.$p[ 0 ].'" width="'.$p[ 1 ].'" height="'.$p[ 2 ].'" style="'.$args[ 'bg_inline_style' ].'" class="'.$args[ 'bg_css' ].'" />';
+				$replace_array = array(
+						'{@image}'	=> '<img src="'.$p[ 0 ].'" width="'.$p[ 1 ].'" height="'.$p[ 2 ].'" style="'.$args[ 'bg_inline_style' ].'" class="'.$args[ 'bg_css' ].'" />',
+					);
+
+			endif;
 
 			// OUTPUT
 			echo strtr( $this->sbg_get_html_templates( $args[ 'bg_template' ] ), $replace_array );
