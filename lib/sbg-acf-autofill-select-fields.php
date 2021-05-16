@@ -115,47 +115,17 @@ class SetupBG_FillACFSelectFields {
 	}
 
 
-	/**
-	 * Auto fill Select options for Genesis Hooks
-	 *
-	 */
-	public function sbg_autofill_genesis_functions( $field ) {
-
-		$funcs = new SetupBG_GenesisFunctionsList();
-
-		$field['choices'] = array();
-
-		//Loop through whatever data you are using, and assign a key/value
-		if( is_array( $funcs->genesis_functions ) ) {
-
-			foreach( $funcs->genesis_functions as $value ) {
-
-				$field['choices'][$value] = $value;
-
-			}
-
-			return $field;
-
-		}
-
-	}
-
-
 	// CONSTRUCT
 	public function __construct() {
 
 		// AUTO FILL SELECT FOR HOOKS (ACF)
 		add_filter( 'acf/load_field/name=bg_hooks', array( $this, 'sbg_autofill_hookimages' ) );
-		add_filter( 'acf/load_field/name=bg_hook_target', array( $this, 'sbg_autofill_hookimages' ) );
 
 		// AUTO FILL SELECT FOR TEMPLATES (ACF)
 		add_filter( 'acf/load_field/name=bg_template', array( $this, 'acf_sbg_view_choices' ) );
 
 		// AUTO FILL SELECT FOR IMAGE SIZE (ACF)
 		add_filter( 'acf/load_field/name=bg_size', array( $this, 'acf_sbg_size_choices' ) );
-
-		// AUTO FILL SELECT FOR GENESIS FUNCTIONS
-		add_filter( 'acf/load_field/name=bg_function', array( $this, 'sbg_autofill_genesis_functions' ) );
 
 	}
 	

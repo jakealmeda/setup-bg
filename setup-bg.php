@@ -9,7 +9,6 @@
  * License: GPL2
  */
 
-
 if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly
 }
@@ -24,7 +23,6 @@ Does this mean we can modify the header just from ACF template alone?
 */
 $setup_bg = new SetupBG();
 include_once( 'lib/sbg-genesis-hooks-list.php' );
-include_once( 'lib/sbg-genesis-functions-list.php' );
 include_once( 'lib/sbg-acf-autofill-select-fields.php' );
 
 class SetupBG {
@@ -41,63 +39,9 @@ class SetupBG {
 		// PULL POST ID FROM THE URL
 		$post_id = url_to_postid( $_SERVER['REQUEST_URI'] , '_wpg_def_keyword', true ); 
 
-		// ###################################
-		// # ACF > CONTAINERS (TAB) > BG_HOOK_REPEATER
-		// # --------------------------------
-		// # loop through each repeater's row
-		// ###################################
-		
-		if( have_rows( 'bg_hook_repeater', $post_id ) ):
-			
-			while( have_rows( 'bg_hook_repeater', $post_id ) ): the_row();
-				
-				if( 'activate' == get_sub_field( 'bg_status' ) ) {
-
-					$bg_hook_target = get_sub_field( 'bg_hook_target' );
-					$bg_function = get_sub_field( 'bg_function' );
-					$bg_hook_priority = get_sub_field( 'bg_hook_priority' );
-
-					// FILTER HOOK AND FUNCTION
-					if( $bg_hook_target != 'N/A' && $bg_function != 'N/A' ) :
-
-						if( function_exists( $bg_function ) ) {
-
-							if( 'remove' == get_sub_field( 'bg_action' ) ) {
-
-								remove_action( $bg_hook_target, $bg_function,  );
-
-							} else {
-
-								// ADD
-								// display the function based on the hook
-								add_action( $bg_hook_target, $bg_function, $bg_hook_priority );
-							}
-
-						} else {
-
-							add_action( $bg_hook_target, function() {
-
-								echo '<img src="'.plugin_dir_url( __FILE__ ).'images/blue_bell.png" style="width:40px; height:40px;" /> Sorry, this function DOES NOT exist.';
-
-							}, $bg_hook_priority );
-
-						}
-
-					endif;
-
-				}
-
-			endwhile;
-		
-		endif;
-
-		// ###################################
-		// # ACF > IMAGES (TAB) > BG_BACKGROUND
-		// # --------------------------------
-		// # loop through each repeater's row
-		// ###################################
 		$args = array();
 		$repeater_name = 'bg_background';
+		
 		if( have_rows( $repeater_name, $post_id ) ):
 			
 			while( have_rows( $repeater_name, $post_id ) ): the_row();
